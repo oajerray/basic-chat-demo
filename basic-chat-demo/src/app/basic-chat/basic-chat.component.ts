@@ -33,8 +33,7 @@ export class BasicChatComponent implements OnInit {
         // subscribing from here.
         session.addStream('chat/channel', diffusion.datatypes.json()).on(
           'value', (topic, specification, newValue, oldValue) => {
-            this.chatlog.push('Chat message from \'' + this.chatSession.security.getPrincipal()
-              + '\': ' + newValue.value.get().content);
+            this.chatlog.push('user: ' + newValue.value.get().content);
           });
         session.select('chat/channel');
       }, (err) => console.log(err));
