@@ -1,11 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import * as diffusion from 'diffusion';
+import { TopicSpecification, DataTypes } from 'diffusion';
+
+
 
 @Component({
   selector: 'app-basic-chat',
   templateUrl: './basic-chat.component.html',
   styleUrls: ['./basic-chat.component.css']
 })
+
 export class BasicChatComponent implements OnInit {
   constructor() { }
   chatSession: diffusion.Session;
@@ -14,26 +18,35 @@ export class BasicChatComponent implements OnInit {
     diffusion.connect({ host: window.location.host, port: 8080, principal: 'control', credentials: 'password' }).then((session) => {
       this.chatSession = session;
 
-
+      const chatSpecification: TopicSpecification = {
+        type: diffusion.topics.TopicType.TIME_SERIES,
+        properties: {
+          TIME_SERIES_EVENT_VALUE_TYPE: 'json',
+        }
+      };
 
       return session.topics.add(
         'chat/channel',
-        diffusion.topics.TopicType.JSON).then((res) => {
-          console.log(res);
-          // subscribing from here:
-          session.select('chat/channel');
-          return session.addStream('chat/channel', diffusion.datatypes.json()).on('value', (topic, specification, newValue, oldValue) => {
+        chatSpecification
+      ).then((res) => {
+        console.log(res);
+        // subscribing from here.
+        session.addStream('chat/channel', diffusion.datatypes.json()).on(
+          'value', (topic, specification, newValue, oldValue) => {
             this.chatlog.push('Chat message from \'' + this.chatSession.security.getPrincipal()
-              + '\': ' + JSON.stringify(newValue.get().content));
-
+              + '\': ' + newValue.value.get().content);
           });
-        }, (err) => console.log(err));
+        session.select('chat/channel');
+      }, (err) => console.log(err));
     });
   }
 
   writeMessage(message: string) {
-    this.chatSession.topics.update(
+    const msg = { content: message };
+    // const msg = 42;
+    this.chatSession.timeseries.append(
       'chat/channel',
-      { content: message }).then((res) => { }, (err) => console.log(err));
+      msg
+    ).then((res) => { console.log(res); }, (err) => console.log(err));
   }
 }
