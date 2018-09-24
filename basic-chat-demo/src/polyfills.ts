@@ -78,3 +78,11 @@ import 'zone.js/dist/zone';  // Included with Angular CLI.
 /***************************************************************************************************
  * APPLICATION IMPORTS
  */
+
+import {Buffer} from 'buffer';
+
+import * as process from 'process';
+
+(window as any).Buffer = Buffer;
+
+(window as any).process = process;
